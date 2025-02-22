@@ -283,7 +283,7 @@ def crud(client, list, member):
     response = client.lists.get_list_member(list, mc_key(email))
   except ApiClientError as error:
     response = { 'status': 'missing' }
-  audience_data = get_audience_data(list)
+  audience_data = get_audience_data(client, list)
   if response['status'] in ['missing', 'archived']:
     if member['Status'] == 'Left OGA':
       pass
