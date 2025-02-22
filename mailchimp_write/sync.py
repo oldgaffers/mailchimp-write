@@ -3,6 +3,7 @@ import hashlib
 import mailchimp_marketing as MailchimpMarketing
 from mailchimp_marketing.api_client import ApiClientError
 from audience_data import get_audience_data
+from payment import add_payment_methods
 # from addresses import add_address
 
 def get_client():
@@ -108,7 +109,7 @@ def build_data(member, audience_data, list):
       "interests": interests,
     }
 
-def search(list, query):
+def search(client, list, query):
   result = []
   try:
     response = client.searchMembers.search(query, list_id=list)
@@ -125,9 +126,9 @@ def search(list, query):
 def mc_key(email):
   return hashlib.md5(email.lower().strip().encode('utf-8')).hexdigest()
 
-def entries_for_member(list, member):
+def entries_for_member(client, list, member):
   r = []
-  matches = search(list, f'{member["Firstname"]} {member["Lastname"]}')
+  matches = search(client, list, f'{member["Firstname"]} {member["Lastname"]}')
   id = int(member['ID'])
   for match in matches:
     match_id = match['merge_fields']['GOLD']
@@ -143,8 +144,8 @@ def delete(list, email):
     e = json.loads(error.text)
     print(f'{e["title"]} deleting {email}')
 
-def delete_old_email(list, email, member):
-  matches = entries_for_member(list, member)
+def delete_old_email(client, list, email, member):
+  matches = entries_for_member(client, list, member)
   if len(matches)>1:
     for match in matches:
       match_email = match['email_address']
@@ -225,7 +226,7 @@ def has_changed(old, new):
   #  return True
   return False, None
 
-def update_changed(list, email, member, data, changes):
+def update_changed(client, list, email, member, data, changes):
   hash = mc_key(email)
   data['status_if_new'] = 'subscribed'
   try:
@@ -261,11 +262,11 @@ def update_changed(list, email, member, data, changes):
       if 'detail' in e:
         print(e['detail'])
 
-def update_if_changed(list, email, member, old, audience_data):
+def update_if_changed(client, list, email, member, old, audience_data):
   data = build_data(member, audience_data, list)
   changed, changes = has_changed(old, data)
   if changed:
-    update_changed(list, email, member, data, changes)
+    update_changed(client, list, email, member, data, changes)
   else:
     if '@oga.org.uk' in email:
       print('no change to member with GOLD ID', member['ID'])
@@ -274,7 +275,7 @@ def update_if_changed(list, email, member, old, audience_data):
       pass
       print('no change to', email)
 
-def crud(list, member):
+def crud(client, list, member):
   email = member['Email'].lower().strip()
   if '@' not in email:
     return
@@ -294,16 +295,16 @@ def crud(list, member):
       delete(list, email)
       # print(f'archive {email}')
     else:
-      update_if_changed(list, email, member, response, audience_data)
-  delete_old_email(list, email, member)
+      update_if_changed(client ,list, email, member, response, audience_data)
+  delete_old_email(client, list, email, member)
 
-def getlistid(name):
+def getlistid(client, name):
   r = client.lists.get_all_lists()
   for l in r['lists']:
     if l['name'] == name:
       return l['id']
 
-def archive(list, member):
+def archive(client, list, member):
   if '@' in member['Email']:
     email = member['Email'].lower().strip()
   else:

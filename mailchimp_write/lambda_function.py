@@ -21,16 +21,16 @@ def update_mailchimp(action, record):
    "api_key": apiKey,
    "server": server,
   })
-  list = getlistid(audience)
+  list = getlistid(client, audience)
   if action == 'added':
     # print('add', record)
-    crud(list, record)
+    crud(client, list, record)
   elif action == 'changed':
     # print('change', record)
-    crud(list, record['after'])
+    crud(client, list, record['after'])
   elif action == 'deleted':
     # print('delete', record)
-    archive(list, record)
+    archive(client, list, record)
   else:
     print(action, json.dumps(record))
 
