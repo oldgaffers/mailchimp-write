@@ -186,11 +186,13 @@ def add(list, email, member, audience_data):
 
 def same(old, new):
   for key in new:
-    if old[key] != new[key]:
-        return False, { 'key': key, 'old': old[key], 'new': new[key] }
+    o = old.get(key, '')
+    if o != new[key]:
+        return False, { 'key': key, 'old': o, 'new': new[key] }
   for key in old:
-    if old[key] != new[key]:
-        return False, { 'key': key, 'old': old[key], 'new': new[key] }
+    n = new.get(key, '')
+    if old[key] != n:
+        return False, { 'key': key, 'old': old[key], 'new': n }
   return True, None
 
 def same_interests(complete, partial):
