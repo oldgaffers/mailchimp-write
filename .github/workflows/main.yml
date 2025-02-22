@@ -27,8 +27,9 @@ jobs:
         run: |
           poetry run pip install -t dist .
           cd dist
-          mv mailchimp_write/lambda_function.py .
           zip -x 'mailchimp_write*' '*.pyc' -r ../lambda.zip . 
+          cd mailchimp_write
+          zip -r ../../lambda.zip -x __init__.py .
       - name: cred
         uses: aws-actions/configure-aws-credentials@v4
         with:
