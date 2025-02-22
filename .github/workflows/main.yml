@@ -1,4 +1,7 @@
 name: deploy to lambda
+permissions:
+  id-token: write
+  contents: read
 on:
   # Trigger the workflow on push or pull request,
   # but only for the main branch
@@ -27,11 +30,10 @@ jobs:
           mv mailchimp_write/lambda_function.py .
           zip -x 'mailchimp_write*' '*.pyc' -r ../lambda.zip . 
       - name: cred
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
+          role-to-assume: arn:aws:iam::651845762820:role/github-OIDC-Role-JdfwPtWdASUt
       - name: deploy
         run: |
           aws lambda update-function-code --function-name mailchimp-write --zip-file fileb://lambda.zip
