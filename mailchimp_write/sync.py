@@ -4,7 +4,7 @@ import mailchimp_marketing as MailchimpMarketing
 from mailchimp_marketing.api_client import ApiClientError
 from audience_data import get_audience_data
 from payment import add_payment_methods
-# from addresses import add_address
+from addresses import empty_address
 
 def get_client():
     return MailchimpMarketing.Client()
@@ -92,8 +92,9 @@ def build_data(member, audience_data, list):
         'SALUTATION': member['Salutation'], 
         'FNAME': member['Firstname'].strip(),
         'LNAME': member['Lastname'].strip(),
-        'PHONE': member['Telephone'],
-        'MOBILE': member['Mobile'],
+        'PHONE': '', # member['Telephone'],
+        'MOBILE': '', # member['Mobile'],
+        'ADDRESS': empty_address(),
         'MEMBER': int(member['Member Number']),
         'REASON': member['Reason For Joining'],
         'GOLD': int(member['ID']),
@@ -101,8 +102,8 @@ def build_data(member, audience_data, list):
     }
     if merge_fields['REASON'] == None:
       merge_fields['REASON'] = ''
-    # add_address(merge_fields, member),
-    add_joined(merge_fields, member),
+    # add_address(merge_fields)
+    add_joined(merge_fields, member)
     return {
       "status": "subscribed",
       "merge_fields": merge_fields,

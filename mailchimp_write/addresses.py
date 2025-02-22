@@ -113,3 +113,7 @@ def add_address(merge_fields, member):
       elif 'suburb' in retrieved_address:
         member['Town'] = retrieved_address['suburb']
     merge_fields['ADDRESS'] = address(member)
+
+
+def empty_address():
+    return { 'addr1': '', 'addr2': '', 'city': '', 'state': '', 'zip': '', 'country': '' }
