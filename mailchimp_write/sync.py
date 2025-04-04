@@ -76,10 +76,12 @@ def boolToMailchimpBool(val):
   return '0'
 
 def build_data(member, audience_data, list):
+    younger_member = audience_data['Options']['Younger Member'];
     small_boats = audience_data['Options']['Interested in events for small boats'];
     primary = audience_data['Family Member']['Primary'];
     use_email = audience_data['Contact Method']['Email'];
     interests = {
+       younger_member: member['Younger Member'],
        small_boats: member['Trailer'], # Small Boat Events
        primary: member['Primary'] or member['Primary'] == None, # Family Member
        use_email: member['Email'] != '' # contact via email
@@ -137,7 +139,7 @@ def entries_for_member(client, list, member):
       r.append(match)
   return r
 
-def delete(list, email):
+def delete(client, list, email):
   try:
     r = client.lists.delete_list_member(list, mc_key(email))
     # print('archived', email)
@@ -153,7 +155,7 @@ def delete_old_email(client, list, email, member):
       if match_email != email:
         delete(list, match_email)
 
-def add(list, email, member, audience_data):
+def add(client, list, email, member, audience_data):
   data = build_data(member, audience_data, list)
   data['email_address'] = email
   try:
@@ -268,6 +270,7 @@ def update_changed(client, list, email, member, data, changes):
 def update_if_changed(client, list, email, member, old, audience_data):
   data = build_data(member, audience_data, list)
   changed, changes = has_changed(old, data)
+  print('C', json.dumps(changes), json.dumps(data))
   if changed:
     update_changed(client, list, email, member, data, changes)
   else:
@@ -279,6 +282,9 @@ def update_if_changed(client, list, email, member, old, audience_data):
       print('no change to', email)
 
 def crud(client, list, member):
+  if member['ID'] == '':
+    print('bad member data', json.dumps(member))
+    return
   email = member['Email'].lower().strip()
   if '@' not in email:
     return
@@ -292,10 +298,10 @@ def crud(client, list, member):
       pass
       # print('no change to ex member', email)
     else:
-      add(list, email, member, audience_data)
+      add(client, list, email, member, audience_data)
   else:
     if member['Status'] == 'Left OGA':
-      delete(list, email)
+      delete(client, list, email)
       # print(f'archive {email}')
     else:
       update_if_changed(client ,list, email, member, response, audience_data)

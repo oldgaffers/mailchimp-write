@@ -52,16 +52,27 @@ def eventbus_handler(event, context):
       'body': json.dumps('Hello from Lambda!')
   }
 
-def topic_handler(event, context):
-  # print('topic handler')
-  for record in event['Records']:
+def record_handler(record):
+  if 'Sns' in record:
     message = json.loads(record['Sns']['Message'])
     detailType = message['DetailType']
     detail = json.loads(message['Detail'])
     update_mailchimp(detailType, detail)
+  elif 'body' in record:
+    message = json.loads(record['body'])
+    detailType = message['DetailType']
+    detail = json.loads(message['Detail'])
+    update_mailchimp(detailType, detail)
+  else:
+    print(record)
 
 def lambda_handler(event, context):
   # print(json.dumps(event))
   if 'Records' in event:
-    return topic_handler(event, context)
+    for record in event['Records']:
+      record_handler(record)
+    return {
+      'statusCode': 200,
+      'body': json.dumps('Hello from Lambda!')
+    } 
   return eventbus_handler(event, context)
