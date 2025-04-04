@@ -270,7 +270,6 @@ def update_changed(client, list, email, member, data, changes):
 def update_if_changed(client, list, email, member, old, audience_data):
   data = build_data(member, audience_data, list)
   changed, changes = has_changed(old, data)
-  print('C', json.dumps(changes), json.dumps(data))
   if changed:
     update_changed(client, list, email, member, data, changes)
   else:
