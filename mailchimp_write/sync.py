@@ -47,7 +47,6 @@ def add_area(interests, member, audience_data):
   for area in areas:
     interests[areas[area]] = area in ia
 
-
 def add_membership_types(interests, member, audience_data):
   membership_types = audience_data['Membership Type']
   for k,v in membership_types.items():
@@ -60,6 +59,8 @@ def add_membership_types(interests, member, audience_data):
     interests[membership_types[member['Membership Type']]] = True
 
 def add_statuses(interests, member, audience_data):
+  if member['Status'] == 'Deceased':
+    return
   statuses = audience_data['Status']
   for k,v in statuses.items():
     interests[v] = False
@@ -70,7 +71,7 @@ def add_statuses(interests, member, audience_data):
   else:
     interests[statuses[member['Status']]] = True
 
-def boolToMailchimpBool(val):
+def boolToMailchimpBool(val)
   if val:
     return '1'
   return '0'
@@ -81,7 +82,7 @@ def build_data(member, audience_data, list):
     primary = audience_data['Family Member']['Primary'];
     use_email = audience_data['Contact Method']['Email'];
     interests = {
-       younger_member: member['Younger Member'],
+       younger_member: member.get('Younger Member', False),
        small_boats: member['Trailer'], # Small Boat Events
        primary: member['Primary'] or member['Primary'] == None, # Family Member
        use_email: member['Email'] != '' # contact via email
@@ -187,28 +188,17 @@ def add(client, list, email, member, audience_data):
       e = json.loads(error.text)
       print(f'{e["title"]} adding {member["ID"]} {member["Lastname"]} {email}')
 
-def same(old, new):
+def same(old, new, deflt=''):
+  r = {}
   for key in new:
-    o = old.get(key, '')
+    o = old.get(key, deflt)
     if o != new[key]:
-        return False, { 'key': key, 'old': o, 'new': new[key] }
+        r.update({ key: new[key] })
   for key in old:
-    n = new.get(key, '')
+    n = new.get(key, deflt)
     if old[key] != n:
-        return False, { 'key': key, 'old': old[key], 'new': n }
-  return True, None
-
-def same_interests(complete, partial):
-  for key in complete:
-    if key in partial:
-      if complete[key] != partial[key]:
-        return False, { 'key': key, 'complete': complete, 'partial': partial }
-    elif complete[key]:
-      partial[key] = False
-      return False, key
-    else:
-      pass
-  return True, None
+        r.update({ key: n })
+  return r
 
 def same_permissions(old, new):
   for p in old:
@@ -219,11 +209,14 @@ def same_permissions(old, new):
   return True, None
 
 def has_changed(old, new):
-  s, d = same(old['merge_fields'], new['merge_fields'])
-  if s == False:
-    return True, d
-  s, d = same_interests(old['interests'], new['interests'])
-  if s == False:
+  print('old', old)
+  print('new', new)
+  dm = same(old['merge_fields'], new['merge_fields'])
+  #if s == False:
+  #  return True, d
+  di = same(old['interests'], new['interests'], False)
+  d = { **dm, **di }
+  if len(d) > 0:
     return True, d
   #if same_permissions(old['marketing_permissions'], new['marketing_permissions']) == False:
   #  print(old['marketing_permissions'])
@@ -232,6 +225,7 @@ def has_changed(old, new):
   return False, None
 
 def update_changed(client, list, email, member, data, changes):
+  print('changes', changes)
   hash = mc_key(email)
   data['status_if_new'] = 'subscribed'
   try:
@@ -293,15 +287,16 @@ def crud(client, list, member):
     response = { 'status': 'missing' }
   audience_data = get_audience_data(client, list)
   if response['status'] in ['missing', 'archived']:
-    if member['Status'] == 'Left OGA':
+    if member['Status'] in ['Left OGA', 'Deceased']:
+      archive(client, list, member) 'Left OGA':
       pass
       # print('no change to ex member', email)
     else:
       add(client, list, email, member, audience_data)
   else:
-    if member['Status'] == 'Left OGA':
+    if member['Status'] in ['Left OGA', 'Deceased']:
       delete(client, list, email)
-      # print(f'archive {email}')
+      print(f'archive {email}')
     else:
       update_if_changed(client ,list, email, member, response, audience_data)
   delete_old_email(client, list, email, member)
