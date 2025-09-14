@@ -71,7 +71,7 @@ def add_statuses(interests, member, audience_data):
   else:
     interests[statuses[member['Status']]] = True
 
-def boolToMailchimpBool(val)
+def boolToMailchimpBool(val):
   if val:
     return '1'
   return '0'
