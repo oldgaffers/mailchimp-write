@@ -288,7 +288,7 @@ def crud(client, list, member):
   audience_data = get_audience_data(client, list)
   if response['status'] in ['missing', 'archived']:
     if member['Status'] in ['Left OGA', 'Deceased']:
-      archive(client, list, member) 'Left OGA':
+      archive(client, list, member)
       pass
       # print('no change to ex member', email)
     else:
