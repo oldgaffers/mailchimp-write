@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "mailchimp_write"}]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.13"
 iso3166 = "^2.1.1"
 mailchimp-marketing = "^3.0.80"
 
