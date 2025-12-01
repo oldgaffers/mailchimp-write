@@ -325,11 +325,11 @@ def audit(client, list, member, fix=False):
     response = client.lists.get_list_member(list, mc_key(email))
   except ApiClientError as error:
     response = { 'status': 'missing' }
-  interests = response.get('interests', {})
-  if pp in interests and interests[pp]:
-    print(f"audit {email} pp")
-  if gc in interests and interests[gc]:
-    print(f"audit {email} gc")
+  # interests = response.get('interests', {})
+  # if pp in interests and interests[pp]:
+  #   print(f"audit {email} pp")
+  # if gc in interests and interests[gc]:
+  #   print(f"audit {email} gc")
   audience_data = get_audience_data(client, list, member)
   if response['status'] in ['missing', 'archived']:
     print(f"audit {email} id {member['ID']} mailchimp status {response['status']}")
