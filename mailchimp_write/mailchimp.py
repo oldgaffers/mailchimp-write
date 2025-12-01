@@ -1,7 +1,7 @@
 import json
 import os
 import boto3
-from sync import get_client, getlistid, crud, archive
+from sync import get_client, getlistid, crud, archive, audit
 
 ssm = boto3.client('ssm')
 
@@ -31,5 +31,8 @@ def update_mailchimp(action, record):
   elif action == 'deleted':
     # print('delete', record)
     archive(client, list, record)
+  elif action == 'audit':
+    # print('audit', record)
+    audit(client, list, record)
   else:
     print(action, json.dumps(record))

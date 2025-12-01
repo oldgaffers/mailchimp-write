@@ -6,6 +6,10 @@ from audience_data import get_audience_data
 from payment import add_payment_methods
 from addresses import empty_address
 
+pp = 'b4eef6d017'
+gc = 'a4ea66476c'
+ignore_list = ['JOINED', 'ADDRESS']
+
 def get_client():
     return MailchimpMarketing.Client()
 
@@ -76,18 +80,18 @@ def boolToMailchimpBool(val):
     return '1'
   return '0'
 
-def build_data(member, audience_data, list):
-    younger_member = audience_data['Options']['Younger Member'];
-    small_boats = audience_data['Options']['Interested in events for small boats'];
-    primary = audience_data['Family Member']['Primary'];
-    use_email = audience_data['Contact Method']['Email'];
+def build_data(member, audience_data):
+    younger_member = audience_data.get('Options', {}).get('Younger Member', False);
+    small_boats = audience_data.get('Options', {}).get('Interested in events for small boats', False);
+    primary = audience_data.get('Family Member', {}).get('Primary', True);
+    use_email = audience_data.get('Contact Method', {}).get('Email', False);
     interests = {
        younger_member: member.get('Younger Member', False),
        small_boats: member['Trailer'], # Small Boat Events
        primary: member['Primary'] or member['Primary'] == None, # Family Member
        use_email: member['Email'] != '' # contact via email
     }
-    add_payment_methods(interests, member, audience_data, list)
+    add_payment_methods(interests, member, audience_data)
     add_area(interests, member, audience_data)
     add_membership_types(interests, member, audience_data)
     add_statuses(interests, member, audience_data)
@@ -157,7 +161,7 @@ def delete_old_email(client, list, email, member):
         delete(list, match_email)
 
 def add(client, list, email, member, audience_data):
-  data = build_data(member, audience_data, list)
+  data = build_data(member, audience_data)
   data['email_address'] = email
   try:
     response = client.lists.add_list_member(list, data)
@@ -211,6 +215,11 @@ def same_permissions(old, new):
 def has_changed(old, new):
   print('old', old)
   print('new', new)
+  for key in ignore_list:
+    if key in old['merge_fields']:
+      del old['merge_fields'][key]
+    if key in new['merge_fields']:
+      del new['merge_fields'][key]
   dm = same(old['merge_fields'], new['merge_fields'])
   #if s == False:
   #  return True, d
@@ -262,7 +271,7 @@ def update_changed(client, list, email, member, data, changes):
         print(e['detail'])
 
 def update_if_changed(client, list, email, member, old, audience_data):
-  data = build_data(member, audience_data, list)
+  data = build_data(member, audience_data)
   changed, changes = has_changed(old, data)
   if changed:
     update_changed(client, list, email, member, data, changes)
@@ -298,8 +307,42 @@ def crud(client, list, member):
       delete(client, list, email)
       print(f'archive {email}')
     else:
-      update_if_changed(client ,list, email, member, response, audience_data)
+      update_if_changed(client, list, email, member, response, audience_data)
   delete_old_email(client, list, email, member)
+
+def audit(client, list, member, fix=False):
+  if member['ID'] == '':
+    print('audit bad member data', json.dumps(member))
+    return
+  email = member['Email'].lower().strip()
+  if '@' not in email:
+    return
+  try:
+    response = client.lists.get_list_member(list, mc_key(email))
+  except ApiClientError as error:
+    response = { 'status': 'missing' }
+  interests = response.get('interests', {})
+  if pp in interests and interests[pp]:
+    print(f"audit {email} pp")
+  if gc in interests and interests[gc]:
+    print(f"audit {email} gc")
+  audience_data = get_audience_data(client, list, member)
+  if response['status'] in ['missing', 'archived']:
+    print(f"audit {email} mailchimp status {response['status']}")
+    return
+  else:
+    if member['Status'] in ['Left OGA', 'Deceased']:
+      print(f"audit should archive {email} {member['Status']}")
+      return
+  data = build_data(member, audience_data)
+  changed, changes = has_changed(response, data)
+  if changed:
+    print(f"audit out of sync {email} {json.dumps(changes)}", json.dumps(member))
+    if fix:
+      update_changed(client, list, email, member, data, changes)
+  else:
+    print('audit no change to', email)
+
 
 def getlistid(client, name):
   r = client.lists.get_all_lists()

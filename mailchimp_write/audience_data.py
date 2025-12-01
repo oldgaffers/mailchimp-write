@@ -19,7 +19,7 @@ def get_audience_data(client, list, values):
         audience_data[category['title']] = group
       except ApiClientError as error:
         e = json.loads(error.text)
-        print(f'{e["title"]} getting category {interest["name"]}')
+        print(f'{e["title"]} getting category')
   except ApiClientError as error:
     e = json.loads(error.text)
     print(f'{e["title"]} getting categories')
@@ -36,9 +36,15 @@ def add_new_values(client, list, values):
     title = category['title']
     if title in values:
       value = values[title]
+      if value == '':
+        continue
       response = client.lists.list_interest_category_interests(list, category['id'], count=100)
       values = response['interests']
       if not any(v['name'] == value for v in values):
         print(f'adding "{value}" to category "{title}"')
         category_id = category['id']
-        client.lists.create_interest_category_interest(list, category_id, {'name': value})
+        try:
+          client.lists.create_interest_category_interest(list, category_id, {'name': value})
+        except ApiClientError as error:
+          e = json.loads(error.text)
+          print(f'{e["title"]} adding value {value} to category {title} id {category_id}')
