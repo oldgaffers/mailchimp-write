@@ -332,7 +332,7 @@ def audit(client, list, member, fix=False):
     print(f"audit {email} gc")
   audience_data = get_audience_data(client, list, member)
   if response['status'] in ['missing', 'archived']:
-    print(f"audit {email} mailchimp status {response['status']}")
+    print(f"audit {email} id {member['ID']} mailchimp status {response['status']}")
     return
   else:
     if member['Status'] in ['Left OGA', 'Deceased']:
