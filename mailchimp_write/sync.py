@@ -39,6 +39,9 @@ def add_joined(merge_fields, member):
     merge_fields['JOINED'] = f"{member['Year Joined']}-01-01"
 
 def add_area(interests, member, audience_data):
+  if 'Area' not in audience_data:
+    print('BAD audience data')
+    return
   areas = audience_data['Area']
   mia = member['Interest Areas']
   if isinstance(mia, list):
@@ -251,10 +254,11 @@ def update_changed(client, list, email, member, data, changes):
     print(json.dumps(e))
     if e['title'] == 'Invalid Resource':
       try:
-        address = data['merge_fields']['ADDRESS']
-        del data['merge_fields']['ADDRESS']
-        client.lists.set_list_member(list, hash, data)
-        print(f'updated {member["Email"]} omitting invalid address {address}')
+        if 'ADDRESS' in data['merge_fields']:
+          address = data['merge_fields']['ADDRESS']
+          del data['merge_fields']['ADDRESS']
+          client.lists.set_list_member(list, hash, data)
+          print(f'updated {member["Email"]} omitting invalid address {address}')
       except ApiClientError as error:
         e = json.loads(error.text)
         print(f'{e["title"]} for {member["ID"]} {member["Lastname"]}')
@@ -342,7 +346,6 @@ def audit(client, list, member, fix=False):
       update_changed(client, list, email, member, data, changes)
   else:
     print('audit no change to', email)
-
 
 def getlistid(client, name):
   r = client.lists.get_all_lists()
