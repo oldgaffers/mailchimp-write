@@ -42,5 +42,6 @@ jobs:
           aws lambda update-function-code --function-name mailchimp-write --zip-file fileb://lambda.zip
           echo SERVER=$(aws ssm get-parameter --name "/MAILCHIMP/SERVER" --query Parameter.Value) >> $GITHUB_ENV 
           echo AUDIENCE=$(aws ssm get-parameter --name "/MAILCHIMP/AUDIENCE" --query Parameter.Value) >> $GITHUB_ENV 
+          env
           aws lambda wait function-updated --function-name mailchimp-write
           aws lambda update-function-configuration --function-name mailchimp-write --environment "{\"Variables\":{\"API_KEY\":\"$API_KEY\",\"SERVER\":\"$SERVER\",\"AUDIENCE\":\"$AUDIENCE\"}}"
