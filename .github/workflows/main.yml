@@ -35,9 +35,9 @@ jobs:
         with:
           aws-region: eu-west-1
           role-to-assume: arn:aws:iam::651845762820:role/github-OIDC-Role-JdfwPtWdASUt
+      - name: deploy
         env:
           API_KEY: ${{ secrets.MAILCHIMP_API_KEY }}
-      - name: deploy
         run: |
           aws lambda update-function-code --function-name mailchimp-write --zip-file fileb://lambda.zip
           echo SERVER=$(aws ssm get-parameter --name "/MAILCHIMP/SERVER" --query Parameter.Value) >> $GITHUB_ENV 
