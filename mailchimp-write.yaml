@@ -1,47 +1,33 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: An AWS Serverless Application Model template describing your function.
-Parameters:
-  ApiKey:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: /MAILCHIMP/API_KEY
-  Server:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: /MAILCHIMP/SERVER
-  Audience:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: /MAILCHIMP/AUDIENCE
+Description: Update MailChimp from GOLD
 Resources:
   mailchimpwrite:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: mailchimp-write
+      FunctionName: mailchimp-write-tmp
       InlineCode: >-
         import json
         def lambda_handler(event, context):
           print(json.dumps(event))
-      Description: ''
+      Description: 'Update MailChimp from GOLD'
       MemorySize: 128
       Timeout: 60
-      Handler: lambda_function.lambda_handler
+      Handler: mailchimp_write.lambda_function.lambda_handler
       Runtime: python3.13
       Architectures:
         - arm64
       EphemeralStorage:
-        Size: 512
-      Policies:
-        - SSMParameterReadPolicy:
-            ParameterName: MAILCHIMP/*      
-      RecursiveLoop: Terminate
+        Size: 512    
       Environment:
         Variables:
-          SERVER: '{{resolve:ssm:/MAILCHIMP/SERVER}}'
-          AUDIENCE: '{{resolve:ssm:/MAILCHIMP/AUDIENCE}}'
-          API_KEY: '{{resolve:ssm-secure:/MAILCHIMP/API_KEY}}'
+          SERVER: us10
+          AUDIENCE: "OGA Members (sync'd with GOLD every 24 hours)"
+          API_KEY: 'unset'
       SnapStart:
         ApplyOn: None
       Events:
-        SQSEvent:/
+        SQS:
           Type: SQS
           Properties:
-            Queue: arn:aws:sqs:${AWS::Region}:${AWS::AccountName}:mailchimp-with-delay
+            Queue: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:mailchimp-with-delay
