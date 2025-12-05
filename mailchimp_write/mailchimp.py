@@ -1,31 +1,12 @@
 import json
 import os
-import boto3
 from sync import get_client, getlistid, crud, archive, audit
-
-ssm = boto3.client('ssm')
 
 def update_mailchimp(action, record):
   # print('update_mailchimp', action, record)
-  excludes = {}
-  if 'EXCLUDE' in os.environ:
-    excludes = json.loads(os.environ.get('EXCLUDE'))
-
-  if 'API_KEY' in os.environ:
-    apiKey = os.environ['API_KEY']
-  else:
-    r = ssm.get_parameter(Name='/MAILCHIMP/API_KEY', WithDecryption=True)
-    apiKey = r['Parameter']['Value']
-  if 'SERVER' in os.environ:
-    server = os.environ['SERVER']
-  else:
-    r = ssm.get_parameter(Name='/MAILCHIMP/SERVER')
-    server = r['Parameter']['Value']
-  if 'AUDIENCE' in os.environ:
-    audience = os.environ['AUDIENCE']
-  else:
-    r = ssm.get_parameter(Name='/MAILCHIMP/AUDIENCE')
-    audience = r['Parameter']['Value']
+  apiKey = os.environ['API_KEY']
+  server = os.environ['SERVER']
+  audience = os.environ['AUDIENCE']
   client = get_client()
   client.set_config({
    "api_key": apiKey,

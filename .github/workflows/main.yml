@@ -35,6 +35,10 @@ jobs:
         with:
           aws-region: eu-west-1
           role-to-assume: arn:aws:iam::651845762820:role/github-OIDC-Role-JdfwPtWdASUt
+        env:
+          API_KEY: ${{ secrets.MAILCHIMP_API_KEY }}
       - name: deploy
         run: |
           aws lambda update-function-code --function-name mailchimp-write --zip-file fileb://lambda.zip
+          aws lambda wait function-updated --function-name mailchimp-write
+          aws lambda update-function-configuration --function-name mailchimp-write --environment "{\"Variables\":{\"API_KEY\":\"$API_KEY\"}}"
