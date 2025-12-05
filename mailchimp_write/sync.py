@@ -161,7 +161,7 @@ def delete_old_email(client, list, email, member):
     for match in matches:
       match_email = match['email_address']
       if match_email != email:
-        delete(list, match_email)
+        delete(client, list, match_email)
 
 def add(client, list, email, member, audience_data):
   data = build_data(member, audience_data)
