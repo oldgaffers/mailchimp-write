@@ -10,12 +10,22 @@ def update_mailchimp(action, record):
   excludes = {}
   if 'EXCLUDE' in os.environ:
     excludes = json.loads(os.environ.get('EXCLUDE'))
-  r = ssm.get_parameter(Name='/MAILCHIMP/API_KEY', WithDecryption=True)
-  apiKey = r['Parameter']['Value']
-  r = ssm.get_parameter(Name='/MAILCHIMP/SERVER')
-  server = r['Parameter']['Value']
-  r = ssm.get_parameter(Name='/MAILCHIMP/AUDIENCE')
-  audience = r['Parameter']['Value']
+
+  if 'API_KEY' in os.environ:
+    apiKey = os.environ['API_KEY']
+  else:
+    r = ssm.get_parameter(Name='/MAILCHIMP/API_KEY', WithDecryption=True)
+    apiKey = r['Parameter']['Value']
+  if 'SERVER' in os.environ:
+    server = os.environ['SERVER']
+  else:
+    r = ssm.get_parameter(Name='/MAILCHIMP/SERVER')
+    server = r['Parameter']['Value']
+  if 'AUDIENCE' in os.environ:
+    audience = os.environ['AUDIENCE']
+  else:
+    r = ssm.get_parameter(Name='/MAILCHIMP/AUDIENCE')
+    audience = r['Parameter']['Value']
   client = get_client()
   client.set_config({
    "api_key": apiKey,
