@@ -2,9 +2,9 @@ import json
 import hashlib
 import mailchimp_marketing as MailchimpMarketing
 from mailchimp_marketing.api_client import ApiClientError
-from audience_data import get_audience_data
-from payment import add_payment_methods
-from addresses import empty_address
+from mailchimp_write.audience_data import get_audience_data
+from mailchimp_write.payment import add_payment_methods
+from mailchimp_write.addresses import empty_address
 
 pp = 'b4eef6d017'
 gc = 'a4ea66476c'
@@ -216,8 +216,8 @@ def same_permissions(old, new):
   return True, None
 
 def has_changed(old, new):
-  print('old', old)
-  print('new', new)
+  # print('old', old)
+  # print('new', new)
   for key in ignore_list:
     if key in old['merge_fields']:
       del old['merge_fields'][key]

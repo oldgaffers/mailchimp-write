@@ -1,5 +1,5 @@
 import json
-from mailchimp import update_mailchimp
+from mailchimp_write.mailchimp import update_mailchimp
 
 def eventbus_handler(event, context):
   if 'x-api-key' not in event['headers']:

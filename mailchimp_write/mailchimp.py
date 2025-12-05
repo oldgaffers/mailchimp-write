@@ -1,6 +1,6 @@
 import json
 import os
-from sync import get_client, getlistid, crud, archive, audit
+from mailchimp_write.sync import get_client, getlistid, crud, archive, audit
 
 def update_mailchimp(action, record):
   # print('update_mailchimp', action, record)
