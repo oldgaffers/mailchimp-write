@@ -5,7 +5,7 @@ Resources:
   mailchimpwrite:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: mailchimp-write-tmp
+      FunctionName: mailchimp-write
       InlineCode: >-
         import json
         def lambda_handler(event, context):
