@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: An AWS Serverless Application Model template describing your function.
+Parameters:
+  ApiKey:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /MAILCHIMP/API_KEY
+  Server:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /MAILCHIMP/SERVER
+  Audience:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /MAILCHIMP/AUDIENCE
+Resources:
+  mailchimpwrite:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: mailchimp-write
+      InlineCode: >-
+        import json
+        def lambda_handler(event, context):
+          print(json.dumps(event))
+      Description: ''
+      MemorySize: 128
+      Timeout: 60
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.13
+      Architectures:
+        - arm64
+      EphemeralStorage:
+        Size: 512
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: MAILCHIMP/*      
+      RecursiveLoop: Terminate
+      Environment:
+        Variables:
+          SERVER: '{{resolve:ssm:/MAILCHIMP/SERVER}}'
+          AUDIENCE: '{{resolve:ssm:/MAILCHIMP/AUDIENCE}}'
+          API_KEY: '{{resolve:ssm-secure:/MAILCHIMP/API_KEY}}'
+      SnapStart:
+        ApplyOn: None
+      Events:
+        SQSEvent:/
+          Type: SQS
+          Properties:
+            Queue: arn:aws:sqs:${AWS::Region}:${AWS::AccountName}:mailchimp-with-delay
